@@ -2,6 +2,7 @@
 name: prottype-stack
 description: prottype プロジェクトの技術スタック・レイヤー構成・import 境界・バリデーション流れ。 Cloudflare Workers, Hono, Inertia, React 19, D1, Drizzle, Better Auth, Tailwind v4, shadcn/ui で実装するとき、または app/ 配下のコードを書くときに使う。
 ---
+
 # prottype 技術スタック
 
 ## ランタイム・インフラ

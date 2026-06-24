@@ -24,7 +24,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "rulesync": "rulesync generate --targets cursor --features rules,skills,mcp",
+    "rulesync": "rulesync generate --targets cursor --features rules,skills,mcp && prettier --write .cursor/",
     "rulesync:check": "bash scripts/rulesync-check.sh",
     "ci": "bun run lint && bun run format:check && bun run rulesync:check && bun run test && bun run build",
     "verify:repro": "bash scripts/verify-repro.sh",
