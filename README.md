@@ -135,12 +135,53 @@ Cloudflare ダッシュボード → 各 Worker → **Settings > Builds** で Gi
 
 ### 6. GitHub Secrets（PR Preview 用）
 
-リポジトリ Settings → Secrets and variables → Actions:
+PR の Preview デプロイ（D1 分離 + `wrangler versions upload`）に **必須**。
 
-| Secret                  | 用途                                  |
-| ----------------------- | ------------------------------------- |
-| `CLOUDFLARE_API_TOKEN`  | D1 作成・削除、Workers preview upload |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare アカウント ID              |
+#### 必要な Secrets
+
+| Secret | 用途 | 取得方法 |
+| --- | --- | --- |
+| `CLOUDFLARE_API_TOKEN` | D1 作成・削除、Workers preview upload | Cloudflare ダッシュボード（下記） |
+| `CLOUDFLARE_ACCOUNT_ID` | アカウント ID | `wrangler whoami` またはダッシュボード右サイドバー |
+
+#### A. Cloudflare API トークン（ダッシュボードで作成）
+
+[My Profile → API Tokens](https://dash.cloudflare.com/profile/api-tokens) → **Create Custom Token**
+
+**Account** 権限のみ追加（Account Settings 等は不要）:
+
+| Permission | Access |
+| --- | --- |
+| Workers Scripts | Edit |
+| D1 | Edit |
+
+Account resources: 対象アカウントを Include
+
+#### B. 自動登録（wrangler + gh）
+
+前提: `bunx wrangler login` 済み、`gh auth login` 済み
+
+```bash
+bun run setup:github-secrets
+```
+
+- `CLOUDFLARE_ACCOUNT_ID` … `wrangler whoami --json` から取得して GitHub に登録
+- `CLOUDFLARE_API_TOKEN` … プロンプトで入力（または `CLOUDFLARE_API_TOKEN=xxx bun run setup:github-secrets`）
+
+Account ID だけ確認:
+
+```bash
+bunx wrangler whoami
+bash scripts/setup-github-secrets.sh --print-only
+```
+
+#### C. 手動登録
+
+GitHub → リポジトリ **Settings → Secrets and variables → Actions → New repository secret**
+
+登録後、PR の Actions を **Re-run jobs**。
+
+詳細: skill `github-secrets-setup`、[docs/deploy.md](./docs/deploy.md#github-actions)
 
 ---
 
@@ -159,7 +200,8 @@ Cloudflare ダッシュボード → 各 Worker → **Settings > Builds** で Gi
 | `bun run rulesync:check`    | `.rulesync/` と `.cursor/` 同期確認     |
 | `bun run ci`                | lint + format + rulesync + test + build |
 | `bun run db:setup`          | Auth スキーマ生成 + マイグレーション    |
-| `bun run rulesync`          | `.rulesync/` → `.cursor/` へ同期        |
+| `bun run setup:remote-d1`   | リモート D1 作成 + wrangler.jsonc 更新 |
+| `bun run setup:github-secrets` | PR Preview 用 GitHub Secrets 登録（wrangler + gh） |
 
 ---
 

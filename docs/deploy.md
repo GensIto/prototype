@@ -149,8 +149,18 @@ Workers Builds のブランチ制御は「本番ブランチ 1 つ + 非本番�
 
 | Name                    | 説明                                |
 | ----------------------- | ----------------------------------- |
-| `CLOUDFLARE_API_TOKEN`  | D1 作成・削除、Workers Scripts Edit |
-| `CLOUDFLARE_ACCOUNT_ID` | アカウント ID                       |
+| `CLOUDFLARE_API_TOKEN`  | D1 作成・削除、Workers Scripts Edit（[ダッシュボード](https://dash.cloudflare.com/profile/api-tokens) で作成） |
+| `CLOUDFLARE_ACCOUNT_ID` | アカウント ID（`wrangler whoami` で取得） |
+
+登録:
+
+```bash
+bunx wrangler login
+gh auth login
+bun run setup:github-secrets
+```
+
+詳細: skill `github-secrets-setup`、[README.md](../README.md#6-github-secretspr-preview-用)
 
 #### 手動で PR preview を試す場合
 

@@ -150,6 +150,7 @@ rulesync.jsonc
     prottype-stack/SKILL.md
     lightweight-ddd-tdd/SKILL.md
     workers-deploy/SKILL.md
+    github-secrets-setup/SKILL.md
     qa-personas/SKILL.md
     test-case-creation/SKILL.md
     qa-review/SKILL.md
@@ -213,12 +214,20 @@ scripts/rulesync-check.sh
 | `preview`         | 同一リポジトリ PR（open/sync）— PR 専用 D1 作成 → デプロイ → PR コメント |
 | `preview-cleanup` | PR クローズ（マージ / 未マージ）— D1 削除                                |
 
-GitHub Secrets（リポジトリ Settings → Secrets）:
+GitHub Secrets（PR Preview 用）:
 
-| Secret                  | 用途                                  |
-| ----------------------- | ------------------------------------- |
-| `CLOUDFLARE_API_TOKEN`  | D1 作成・削除、Workers preview upload |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare アカウント ID              |
+```bash
+bunx wrangler login
+gh auth login
+bun run setup:github-secrets
+```
+
+| Secret                  | 用途                                                          |
+| ----------------------- | ------------------------------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`  | D1 作成・削除、Workers preview upload（ダッシュボードで作成） |
+| `CLOUDFLARE_ACCOUNT_ID` | `wrangler whoami` で取得                                      |
+
+詳細: skill `github-secrets-setup`
 
 Workers Builds: `prottype` Worker の **非本番ブランチビルドは無効**（GHA preview と二重実行を防ぐ）。
 

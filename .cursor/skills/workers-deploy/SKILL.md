@@ -93,6 +93,18 @@ Auth はリクエスト origin を `baseURL` に使うため Preview URL でも�
 | `CLOUDFLARE_API_TOKEN`  | D1 作成・削除、Workers Scripts Edit |
 | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare アカウント ID            |
 
+登録手順: skill **`github-secrets-setup`**
+
+```bash
+bunx wrangler login
+gh auth login
+bun run setup:github-secrets
+```
+
+- Account ID … `wrangler whoami --json` で取得（CLI 可）
+- API トークン … [ダッシュボード](https://dash.cloudflare.com/profile/api-tokens) で Workers Scripts Edit + D1 Edit（CLI 不可）
+- GitHub 登録 … `gh secret set`（`scripts/setup-github-secrets.sh`）
+
 ### 関連ファイル
 
 ```

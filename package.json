@@ -11,6 +11,7 @@
     "deploy:production": "bash scripts/validate-wrangler-d1.sh && vite build && wrangler deploy --env production",
     "deploy:preview": "vite build && wrangler versions upload",
     "setup:remote-d1": "bash scripts/setup-remote-d1.sh",
+    "setup:github-secrets": "bash scripts/setup-github-secrets.sh",
     "preview": "vite build && vite preview",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "auth:schema": "bunx @better-auth/cli@1.4.21 generate --config ./app/modules/auth/create-auth.ts --output ./app/db/schema/auth/index.ts -y",
