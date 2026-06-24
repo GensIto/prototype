@@ -76,9 +76,9 @@ bun run build
 1. `quality` 成功後のみ実行
 2. `scripts/preview-d1.sh ensure <pr>` — D1 `prottype-pr-<番号>` を作成（既存なら再利用）
 3. `scripts/preview-d1.sh migrate <pr>` — マイグレーション適用
-4. `scripts/render-wrangler-preview-config.sh` — PR 専用 wrangler 設定を生成
+4. `scripts/patch-wrangler-preview-config.sh` — ビルド済み `dist/prottype/wrangler.json` に PR 用 D1 を反映
 5. `scripts/ensure-worker.sh` — Worker `prottype` が未作成なら初回 `wrangler deploy`
-6. `wrangler versions upload --preview-alias pr-<番号>` — Preview デプロイ
+6. `wrangler versions upload --preview-alias pr-<番号>` — redirect 経由で Worker モジュール + assets を upload
 7. PR コメントに Preview URL / D1 名を投稿
 
 Auth はリクエスト origin を `baseURL` に使うため Preview URL でもログイン可能。`BETTER_AUTH_SECRET` は develop Worker の secret を継承。
@@ -113,7 +113,9 @@ bun run setup:github-secrets
 scripts/deploy-preview.sh
 scripts/ensure-worker.sh
 scripts/preview-d1.sh
-scripts/render-wrangler-preview-config.sh
+scripts/patch-wrangler-preview-config.sh
+scripts/restore-wrangler-preview-config.sh
+scripts/render-wrangler-preview-d1-config.sh
 scripts/rulesync-check.sh
 .prettierignore
 package.json   # format:check, rulesync:check, ci

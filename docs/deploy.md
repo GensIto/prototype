@@ -92,7 +92,7 @@ PR Preview は **GitHub Actions** が担当する（Workers Builds ではない�
 
 1. `prottype-pr-<PR番号>` という D1 を作成（既存なら再利用）
 2. マイグレーションを適用
-3. PR 専用 `wrangler.preview.pr-<番号>.jsonc` で `wrangler versions upload`
+3. `dist/prottype/wrangler.json` を PR 用 D1 にパッチして `wrangler versions upload`（redirect 経由）
 4. PR コメントに Preview URL と D1 名を投稿
 5. **PR クローズ時**（マージ / 未マージ）に D1 を削除
 

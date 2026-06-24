@@ -96,18 +96,29 @@ if [[ ! -f "$BUILT_CONFIG" ]]; then
   exit 1
 fi
 
+patch_output="$(
+  bash scripts/patch-wrangler-preview-config.sh "${PR_NUMBER}" "${database_id}"
+)"
 config_path="$(
-  bash scripts/render-wrangler-preview-config.sh "${PR_NUMBER}" "${database_id}" \
-    | grep '^config_path=' \
-    | cut -d= -f2-
+  echo "$patch_output" | grep '^config_path=' | cut -d= -f2-
+)"
+backup_path="$(
+  echo "$patch_output" | grep '^backup_path=' | cut -d= -f2-
 )"
 if [[ -z "$config_path" || ! -f "$config_path" ]]; then
-  log "FAIL: could not render preview wrangler config"
+  log "FAIL: could not patch preview wrangler config"
   exit 1
 fi
 
+restore_preview_config() {
+  if [[ -n "${backup_path:-}" ]]; then
+    bash scripts/restore-wrangler-preview-config.sh "$backup_path" || true
+  fi
+}
+trap restore_preview_config EXIT
+
 log "Ensuring Worker prottype exists"
-bash scripts/ensure-worker.sh prottype "${BUILT_CONFIG}"
+bash scripts/ensure-worker.sh prottype
 
 export NO_COLOR=1
 export FORCE_COLOR=0
@@ -117,7 +128,6 @@ log "Uploading preview version (alias: ${ALIAS})"
 upload_preview() {
   rm -f "$OUTPUT_JSON"
   bunx wrangler versions upload \
-    --config "$config_path" \
     --preview-alias "$ALIAS" \
     --message "$MESSAGE" \
     2>&1 | tee "$LOG_FILE" >&2
@@ -127,7 +137,7 @@ upload_preview() {
 if ! upload_preview; then
   if grep -qE '10007|does not exist on your account' "$LOG_FILE"; then
     log "Worker prottype が未作成のため初回 deploy 後に再試行します"
-    bash scripts/ensure-worker.sh prottype "${BUILT_CONFIG}"
+    bash scripts/ensure-worker.sh prottype
     upload_preview
   else
     exit 1

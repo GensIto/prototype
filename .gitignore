@@ -16,7 +16,7 @@ node_modules/
 .wrangler
 wrangler.preview.*.jsonc
 wrangler.preview.*.d1.jsonc
-dist/prottype/wrangler.preview.*.json
+dist/prottype/wrangler.json.bak
 
 # env
 .env

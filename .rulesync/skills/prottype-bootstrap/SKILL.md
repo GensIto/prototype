@@ -191,7 +191,7 @@ rulesync / verify:repro
 .github/workflows/ci.yml
 scripts/deploy-preview.sh
 scripts/preview-d1.sh
-scripts/render-wrangler-preview-config.sh
+scripts/patch-wrangler-preview-config.sh
 scripts/rulesync-check.sh
 .prettierignore
 .gitignore                    # wrangler.preview.*.jsonc
@@ -269,7 +269,7 @@ test -f wrangler.jsonc
 test -f .github/workflows/ci.yml
 test -f scripts/deploy-preview.sh
 test -f scripts/preview-d1.sh
-test -f scripts/render-wrangler-preview-config.sh
+test -f scripts/patch-wrangler-preview-config.sh
 test -f scripts/rulesync-check.sh
 grep -q 'preview_urls' wrangler.jsonc
 grep -q 'env.staging' wrangler.jsonc

@@ -5,7 +5,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 WORKER_NAME="${1:-prottype}"
-CONFIG="${2:-${ROOT}/dist/prottype/wrangler.json}"
+BUILT_CONFIG="${ROOT}/dist/prottype/wrangler.json"
 
 require_cloudflare_env() {
   if [[ -z "${CLOUDFLARE_API_TOKEN:-}" || -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]]; then
@@ -37,8 +37,8 @@ worker_exists() {
 
 require_cloudflare_env
 
-if [[ ! -f "$CONFIG" ]]; then
-  echo "FAIL: ${CONFIG} not found. Run 'bun run build' first." >&2
+if [[ ! -f "$BUILT_CONFIG" ]]; then
+  echo "FAIL: ${BUILT_CONFIG} not found. Run 'bun run build' first." >&2
   exit 1
 fi
 
@@ -49,5 +49,5 @@ fi
 
 echo "bootstrapping: ${WORKER_NAME}" >&2
 echo "hint: 初回のみ develop D1 で deploy します。BETTER_AUTH_* は wrangler secret bulk で登録すると Preview でも Auth が動作します" >&2
-bunx wrangler deploy --config "$CONFIG" >&2
+bunx wrangler deploy >&2
 echo "bootstrapped: ${WORKER_NAME}" >&2
