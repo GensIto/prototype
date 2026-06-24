@@ -15,6 +15,7 @@ DB_NAME="prottype-pr-${PR_NUMBER}"
 require_cloudflare_env() {
   if [[ -z "${CLOUDFLARE_API_TOKEN:-}" || -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]]; then
     echo "FAIL: CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID are required" >&2
+    echo "GitHub Actions: Settings → Secrets and variables → Actions に両方を登録してください" >&2
     exit 1
   fi
 }

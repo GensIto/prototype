@@ -66,6 +66,18 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Verify Cloudflare secrets
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [[ -z "${CLOUDFLARE_API_TOKEN}" || -z "${CLOUDFLARE_ACCOUNT_ID}" ]]; then
+            echo "::error::GitHub Secrets が未設定です。Settings → Secrets and variables → Actions に CLOUDFLARE_API_TOKEN と CLOUDFLARE_ACCOUNT_ID を追加してください。" >&2
+            echo "CLOUDFLARE_API_TOKEN: Workers Scripts Edit + D1 Edit 権限の API トークン" >&2
+            echo "CLOUDFLARE_ACCOUNT_ID: Cloudflare ダッシュボード右サイドバーの Account ID" >&2
+            exit 1
+          fi
+
       - name: Deploy preview with isolated D1
         id: deploy
         env:
@@ -174,4 +186,9 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: bash scripts/preview-d1.sh delete "${{ github.event.pull_request.number }}"
+        run: |
+          if [[ -z "${CLOUDFLARE_API_TOKEN}" || -z "${CLOUDFLARE_ACCOUNT_ID}" ]]; then
+            echo "skip: CLOUDFLARE_* secrets not configured"
+            exit 0
+          fi
+          bash scripts/preview-d1.sh delete "${{ github.event.pull_request.number }}"
