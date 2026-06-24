@@ -1,4 +1,4 @@
-# prottype
+# prototype
 
 Cloudflare Workers + Hono + Inertia.js + React 19 + D1 + Better Auth + Drizzle ORM
 
