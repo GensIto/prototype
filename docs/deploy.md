@@ -147,10 +147,10 @@ Workers Builds のブランチ制御は「本番ブランチ 1 つ + 非本番�
 
 ### GitHub Secrets
 
-| Name                    | 説明                                |
-| ----------------------- | ----------------------------------- |
+| Name                    | 説明                                                                                                           |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------- |
 | `CLOUDFLARE_API_TOKEN`  | D1 作成・削除、Workers Scripts Edit（[ダッシュボード](https://dash.cloudflare.com/profile/api-tokens) で作成） |
-| `CLOUDFLARE_ACCOUNT_ID` | アカウント ID（`wrangler whoami` で取得） |
+| `CLOUDFLARE_ACCOUNT_ID` | アカウント ID（`wrangler whoami` で取得）                                                                      |
 
 登録:
 

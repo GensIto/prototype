@@ -88,10 +88,10 @@ Auth はリクエスト origin を `baseURL` に使うため Preview URL でも�
 
 ### GitHub Secrets（preview 用）
 
-| Secret | 用途 |
-| --- | --- |
-| `CLOUDFLARE_API_TOKEN` | D1 作成・削除、Workers Scripts Edit |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare アカウント ID |
+| Secret                  | 用途                                |
+| ----------------------- | ----------------------------------- |
+| `CLOUDFLARE_API_TOKEN`  | D1 作成・削除、Workers Scripts Edit |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare アカウント ID            |
 
 登録手順: skill **`github-secrets-setup`**
 

@@ -139,10 +139,10 @@ PR の Preview デプロイ（D1 分離 + `wrangler versions upload`）に **必
 
 #### 必要な Secrets
 
-| Secret | 用途 | 取得方法 |
-| --- | --- | --- |
-| `CLOUDFLARE_API_TOKEN` | D1 作成・削除、Workers preview upload | Cloudflare ダッシュボード（下記） |
-| `CLOUDFLARE_ACCOUNT_ID` | アカウント ID | `wrangler whoami` またはダッシュボード右サイドバー |
+| Secret                  | 用途                                  | 取得方法                                           |
+| ----------------------- | ------------------------------------- | -------------------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`  | D1 作成・削除、Workers preview upload | Cloudflare ダッシュボード（下記）                  |
+| `CLOUDFLARE_ACCOUNT_ID` | アカウント ID                         | `wrangler whoami` またはダッシュボード右サイドバー |
 
 #### A. Cloudflare API トークン（ダッシュボードで作成）
 
@@ -150,10 +150,10 @@ PR の Preview デプロイ（D1 分離 + `wrangler versions upload`）に **必
 
 **Account** 権限のみ追加（Account Settings 等は不要）:
 
-| Permission | Access |
-| --- | --- |
-| Workers Scripts | Edit |
-| D1 | Edit |
+| Permission      | Access |
+| --------------- | ------ |
+| Workers Scripts | Edit   |
+| D1              | Edit   |
 
 Account resources: 対象アカウントを Include
 
@@ -187,20 +187,20 @@ GitHub → リポジトリ **Settings → Secrets and variables → Actions → 
 
 ## スクリプト
 
-| コマンド                    | 説明                                    |
-| --------------------------- | --------------------------------------- |
-| `bun run dev`               | Vite 開発サーバー                       |
-| `bun run build`             | 本番ビルド                              |
-| `bun run deploy:develop`    | develop 環境へデプロイ                  |
-| `bun run deploy:staging`    | staging 環境へデプロイ                  |
-| `bun run deploy:production` | production 環境へデプロイ               |
-| `bun run test`              | Vitest 単体テスト                       |
-| `bun run lint`              | ESLint                                  |
-| `bun run format:check`      | Prettier チェック（CI 用）              |
-| `bun run rulesync:check`    | `.rulesync/` と `.cursor/` 同期確認     |
-| `bun run ci`                | lint + format + rulesync + test + build |
-| `bun run db:setup`          | Auth スキーマ生成 + マイグレーション    |
-| `bun run setup:remote-d1`   | リモート D1 作成 + wrangler.jsonc 更新 |
+| コマンド                       | 説明                                               |
+| ------------------------------ | -------------------------------------------------- |
+| `bun run dev`                  | Vite 開発サーバー                                  |
+| `bun run build`                | 本番ビルド                                         |
+| `bun run deploy:develop`       | develop 環境へデプロイ                             |
+| `bun run deploy:staging`       | staging 環境へデプロイ                             |
+| `bun run deploy:production`    | production 環境へデプロイ                          |
+| `bun run test`                 | Vitest 単体テスト                                  |
+| `bun run lint`                 | ESLint                                             |
+| `bun run format:check`         | Prettier チェック（CI 用）                         |
+| `bun run rulesync:check`       | `.rulesync/` と `.cursor/` 同期確認                |
+| `bun run ci`                   | lint + format + rulesync + test + build            |
+| `bun run db:setup`             | Auth スキーマ生成 + マイグレーション               |
+| `bun run setup:remote-d1`      | リモート D1 作成 + wrangler.jsonc 更新             |
 | `bun run setup:github-secrets` | PR Preview 用 GitHub Secrets 登録（wrangler + gh） |
 
 ---

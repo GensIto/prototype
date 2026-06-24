@@ -10,18 +10,18 @@ description: >-
 
 PR Preview（`.github/workflows/ci.yml` の `preview` ジョブ）に必要な Secrets。
 
-| Secret | 用途 |
-| --- | --- |
-| `CLOUDFLARE_API_TOKEN` | D1 作成・削除、`wrangler versions upload` |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare アカウント ID |
+| Secret                  | 用途                                      |
+| ----------------------- | ----------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`  | D1 作成・削除、`wrangler versions upload` |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare アカウント ID                  |
 
 ## wrangler でできること / できないこと
 
-| 項目 | 方法 |
-| --- | --- |
-| Account ID 取得 | `bunx wrangler whoami --json`（要 `wrangler login`） |
-| API トークン作成 | **CLI 不可** → [ダッシュボード](https://dash.cloudflare.com/profile/api-tokens) |
-| GitHub Secrets 登録 | `gh secret set` または `bash scripts/setup-github-secrets.sh` |
+| 項目                | 方法                                                                            |
+| ------------------- | ------------------------------------------------------------------------------- |
+| Account ID 取得     | `bunx wrangler whoami --json`（要 `wrangler login`）                            |
+| API トークン作成    | **CLI 不可** → [ダッシュボード](https://dash.cloudflare.com/profile/api-tokens) |
+| GitHub Secrets 登録 | `gh secret set` または `bash scripts/setup-github-secrets.sh`                   |
 
 ## 1. Cloudflare API トークン（手動）
 
@@ -29,10 +29,10 @@ PR Preview（`.github/workflows/ci.yml` の `preview` ジョブ）に必要な S
 
 **Account** 権限:
 
-| Permission | Access |
-| --- | --- |
-| Workers Scripts | Edit |
-| D1 | Edit |
+| Permission      | Access |
+| --------------- | ------ |
+| Workers Scripts | Edit   |
+| D1              | Edit   |
 
 Account Settings 等の追加権限は **不要**。
 
@@ -64,10 +64,10 @@ bash scripts/setup-github-secrets.sh --manual
 
 GitHub → リポジトリ **Settings → Secrets and variables → Actions**
 
-| Name | Value |
-| --- | --- |
+| Name                    | Value                                                |
+| ----------------------- | ---------------------------------------------------- |
 | `CLOUDFLARE_ACCOUNT_ID` | ダッシュボード右サイドバー、または `wrangler whoami` |
-| `CLOUDFLARE_API_TOKEN` | 手順 1 で作成したトークン |
+| `CLOUDFLARE_API_TOKEN`  | 手順 1 で作成したトークン                            |
 
 ## 4. 検証
 

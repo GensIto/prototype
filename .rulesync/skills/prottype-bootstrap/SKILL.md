@@ -225,10 +225,10 @@ gh auth login
 bun run setup:github-secrets
 ```
 
-| Secret | 用途 |
-| --- | --- |
-| `CLOUDFLARE_API_TOKEN` | D1 作成・削除、Workers preview upload（ダッシュボードで作成） |
-| `CLOUDFLARE_ACCOUNT_ID` | `wrangler whoami` で取得 |
+| Secret                  | 用途                                                          |
+| ----------------------- | ------------------------------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`  | D1 作成・削除、Workers preview upload（ダッシュボードで作成） |
+| `CLOUDFLARE_ACCOUNT_ID` | `wrangler whoami` で取得                                      |
 
 詳細: skill `github-secrets-setup`
 
