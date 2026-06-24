@@ -1,58 +1,51 @@
 {
-	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "prottype",
-	"main": "./app/server.ts",
-	"compatibility_date": "2026-06-24",
-	"compatibility_flags": [
-		"nodejs_compat"
-	],
-	"preview_urls": true,
-	"vars": {
-		"ENVIRONMENT": "development",
-	},
-	"d1_databases": [
-		{
-			"binding": "DB",
-			"database_name": "prottype",
-			"database_id": "00000000-0000-0000-0000-000000000001",
-			"migrations_dir": "migrations",
-		},
-		{
-			"binding": "prottype",
-			"database_name": "prottype",
-			"database_id": "2eb4585d-2de4-45b3-8887-3e4b8f3d6f93"
-		},
-	],
-	"observability": {
-		"enabled": true,
-		"head_sampling_rate": 1,
-	},
-	"env": {
-		"staging": {
-			"vars": {
-				"ENVIRONMENT": "staging",
-			},
-			"d1_databases": [
-				{
-					"binding": "DB",
-					"database_name": "prottype-staging",
-					"database_id": "00000000-0000-0000-0000-000000000002",
-					"migrations_dir": "migrations",
-				},
-			],
-		},
-		"production": {
-			"vars": {
-				"ENVIRONMENT": "production",
-			},
-			"d1_databases": [
-				{
-					"binding": "DB",
-					"database_name": "prottype-production",
-					"database_id": "00000000-0000-0000-0000-000000000003",
-					"migrations_dir": "migrations",
-				},
-			],
-		},
-	},
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "prottype",
+  "main": "./app/server.ts",
+  "compatibility_date": "2026-06-24",
+  "compatibility_flags": ["nodejs_compat"],
+  "preview_urls": true,
+  "vars": {
+    "ENVIRONMENT": "development",
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "prottype",
+      "database_id": "2eb4585d-2de4-45b3-8887-3e4b8f3d6f93",
+      "migrations_dir": "migrations",
+    },
+  ],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+  },
+  "env": {
+    "staging": {
+      "vars": {
+        "ENVIRONMENT": "staging",
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "prottype-staging",
+          "database_id": "83dc1ae8-ed1c-4683-9b89-43f562ac981f",
+          "migrations_dir": "migrations",
+        },
+      ],
+    },
+    "production": {
+      "vars": {
+        "ENVIRONMENT": "production",
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "prottype-production",
+          "database_id": "e1894f37-604a-43fb-9b36-304193ede904",
+          "migrations_dir": "migrations",
+        },
+      ],
+    },
+  },
 }

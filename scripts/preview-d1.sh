@@ -4,6 +4,9 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+# shellcheck source=d1-helpers.sh
+source "${ROOT}/scripts/d1-helpers.sh"
+
 COMMAND="${1:?Usage: preview-d1.sh <ensure|migrate|delete> <pr-number>}"
 PR_NUMBER="${2:?Usage: preview-d1.sh <command> <pr-number>}"
 
@@ -17,29 +20,13 @@ require_cloudflare_env() {
 }
 
 database_id() {
-  bunx wrangler d1 info "$DB_NAME" --json 2>/dev/null \
-    | bun -e "
-        const fs = require('node:fs')
-        const input = fs.readFileSync(0, 'utf8').trim()
-        if (!input) process.exit(1)
-        const data = JSON.parse(input)
-        const id = data.uuid ?? data.database_id
-        if (!id) process.exit(1)
-        process.stdout.write(String(id))
-      "
+  lookup_d1_id "$DB_NAME"
 }
 
 ensure_database() {
   require_cloudflare_env
 
-  if id="$(database_id)"; then
-    echo "database_name=${DB_NAME}"
-    echo "database_id=${id}"
-    return 0
-  fi
-
-  bunx wrangler d1 create "$DB_NAME" >&2
-  id="$(database_id)"
+  id="$(ensure_remote_d1 "$DB_NAME")"
   echo "database_name=${DB_NAME}"
   echo "database_id=${id}"
 }
