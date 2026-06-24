@@ -87,6 +87,15 @@ bash scripts/preview-d1.sh ensure "${PR_NUMBER}" >"$ENV_FILE"
 load_env "$ENV_FILE"
 bash scripts/preview-d1.sh migrate "${PR_NUMBER}"
 
+log "Building preview for PR #${PR_NUMBER} (D1: ${DATABASE_NAME})"
+bun run build >&2
+
+BUILT_CONFIG="${ROOT}/dist/prottype/wrangler.json"
+if [[ ! -f "$BUILT_CONFIG" ]]; then
+  log "FAIL: ${BUILT_CONFIG} not found after build"
+  exit 1
+fi
+
 config_path="$(
   bash scripts/render-wrangler-preview-config.sh "${PR_NUMBER}" "${database_id}" \
     | grep '^config_path=' \
@@ -97,16 +106,12 @@ if [[ -z "$config_path" || ! -f "$config_path" ]]; then
   exit 1
 fi
 
-rm -f "$OUTPUT_JSON"
+log "Ensuring Worker prottype exists"
+bash scripts/ensure-worker.sh prottype "${BUILT_CONFIG}"
+
 export NO_COLOR=1
 export FORCE_COLOR=0
 export WRANGLER_OUTPUT_FILE_PATH="$OUTPUT_JSON"
-
-log "Building preview for PR #${PR_NUMBER} (D1: ${DATABASE_NAME})"
-bun run build >&2
-
-log "Ensuring Worker prottype exists"
-bash scripts/ensure-worker.sh prottype "${ROOT}/wrangler.jsonc"
 
 log "Uploading preview version (alias: ${ALIAS})"
 upload_preview() {
@@ -122,7 +127,7 @@ upload_preview() {
 if ! upload_preview; then
   if grep -qE '10007|does not exist on your account' "$LOG_FILE"; then
     log "Worker prottype が未作成のため初回 deploy 後に再試行します"
-    bash scripts/ensure-worker.sh prottype "${ROOT}/wrangler.jsonc"
+    bash scripts/ensure-worker.sh prottype "${BUILT_CONFIG}"
     upload_preview
   else
     exit 1

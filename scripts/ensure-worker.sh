@@ -5,7 +5,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 WORKER_NAME="${1:-prottype}"
-CONFIG="${2:-${ROOT}/wrangler.jsonc}"
+CONFIG="${2:-${ROOT}/dist/prottype/wrangler.json}"
 
 require_cloudflare_env() {
   if [[ -z "${CLOUDFLARE_API_TOKEN:-}" || -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]]; then
@@ -36,6 +36,11 @@ worker_exists() {
 }
 
 require_cloudflare_env
+
+if [[ ! -f "$CONFIG" ]]; then
+  echo "FAIL: ${CONFIG} not found. Run 'bun run build' first." >&2
+  exit 1
+fi
 
 if worker_exists; then
   echo "exists: ${WORKER_NAME}" >&2

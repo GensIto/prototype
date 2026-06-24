@@ -42,7 +42,7 @@ migrate_database() {
   fi
 
   config_path="$(
-    bash scripts/render-wrangler-preview-config.sh "${PR_NUMBER}" "${id}" \
+    bash scripts/render-wrangler-preview-d1-config.sh "${PR_NUMBER}" "${id}" \
       | grep '^config_path=' \
       | cut -d= -f2-
   )"

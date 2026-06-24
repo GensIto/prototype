@@ -7,34 +7,49 @@ cd "$ROOT"
 PR_NUMBER="${1:?Usage: render-wrangler-preview-config.sh <pr-number> <database-id>}"
 DATABASE_ID="${2:?Usage: render-wrangler-preview-config.sh <pr-number> <database-id>}"
 DATABASE_NAME="prottype-pr-${PR_NUMBER}"
-OUT="${3:-${ROOT}/wrangler.preview.pr-${PR_NUMBER}.jsonc}"
+BASE_CONFIG="${ROOT}/dist/prottype/wrangler.json"
+OUT="${3:-${ROOT}/dist/prottype/wrangler.preview.pr-${PR_NUMBER}.json}"
+
+if [[ ! -f "$BASE_CONFIG" ]]; then
+  echo "FAIL: ${BASE_CONFIG} not found. Run 'bun run build' first." >&2
+  exit 1
+fi
 
 mkdir -p "$(dirname "$OUT")"
 
-cat >"$OUT" <<EOF
-{
-  "\$schema": "node_modules/wrangler/config-schema.json",
-  "name": "prottype",
-  "main": "./app/server.ts",
-  "compatibility_date": "2026-06-24",
-  "compatibility_flags": ["nodejs_compat"],
-  "preview_urls": true,
-  "vars": {
-    "ENVIRONMENT": "preview"
+bun -e "
+const fs = require('node:fs')
+const base = JSON.parse(fs.readFileSync(process.argv[1], 'utf8'))
+const databaseName = process.argv[2]
+const databaseId = process.argv[3]
+const outPath = process.argv[4]
+
+const config = {
+  name: base.name,
+  main: base.main,
+  compatibility_date: base.compatibility_date,
+  compatibility_flags: base.compatibility_flags,
+  preview_urls: true,
+  no_bundle: base.no_bundle,
+  vars: {
+    ENVIRONMENT: 'preview',
   },
-  "d1_databases": [
+  d1_databases: [
     {
-      "binding": "DB",
-      "database_name": "${DATABASE_NAME}",
-      "database_id": "${DATABASE_ID}",
-      "migrations_dir": "migrations"
-    }
+      binding: 'DB',
+      database_name: databaseName,
+      database_id: databaseId,
+      migrations_dir: 'migrations',
+    },
   ],
-  "observability": {
-    "enabled": true,
-    "head_sampling_rate": 1
-  }
+  observability: base.observability,
 }
-EOF
+
+if (base.assets) {
+  config.assets = base.assets
+}
+
+fs.writeFileSync(outPath, JSON.stringify(config, null, 2) + '\n')
+" "$BASE_CONFIG" "$DATABASE_NAME" "$DATABASE_ID" "$OUT"
 
 echo "config_path=${OUT}"
