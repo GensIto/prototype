@@ -76,12 +76,20 @@ develop / staging / production へのデプロイ、PR Preview を使う場合�
 ### 1. D1 データベースを作成
 
 ```bash
+wrangler login   # 未ログインの場合
+bun run setup:remote-d1
+```
+
+`wrangler.jsonc` のプレースホルダー `database_id`（`00000000-...`）を、Cloudflare 上の実 ID に自動反映する。
+
+手動で行う場合:
+
+```bash
 wrangler d1 create prottype
 wrangler d1 create prottype-staging
 wrangler d1 create prottype-production
+# 出力された database_id を wrangler.jsonc に反映
 ```
-
-出力された `database_id` を `wrangler.jsonc` の各 env に反映する。
 
 ### 2. リモートマイグレーション
 
@@ -122,6 +130,8 @@ Cloudflare ダッシュボード → 各 Worker → **Settings > Builds** で Gi
 | `prottype-production` | `main`       | 無効                 | `bun run deploy:production` |
 
 **PR Preview は GitHub Actions が担当**するため、`prottype` Worker の非本番ブランチビルドは無効にすること。
+
+**Workers Builds の Worker 名は `wrangler.jsonc` の `name`（`prottype`）と一致させること。** ダッシュボード上が `prototype` など別名だとデプロイが失敗する。
 
 ### 6. GitHub Secrets（PR Preview 用）
 
@@ -166,6 +176,29 @@ GitHub Actions（[`.github/workflows/ci.yml`](./.github/workflows/ci.yml)）:
 PR Preview は **D1 も PR 単位で分離** される。develop / staging / production の DB とはコンフリクトしない。
 
 詳細: [docs/deploy.md](./docs/deploy.md#github-actions)
+
+---
+
+## トラブルシューティング
+
+### `D1 binding 'DB' references database '00000000-...' which was not found`
+
+**原因:** `wrangler.jsonc` の `database_id` がプレースホルダーのまま。Workers Builds / `deploy:develop` が存在しない D1 を参照している。
+
+**対処:**
+
+```bash
+wrangler login
+bun run setup:remote-d1
+bun run db:migrate:remote
+bun run deploy:develop
+```
+
+変更した `wrangler.jsonc` を commit / push する。
+
+### Workers Builds が PR ブランチでも動いてしまう
+
+`prottype` Worker → Settings → Builds → **非本番ブランチのビルドを無効**にする。PR Preview は GitHub Actions が担当。
 
 ---
 

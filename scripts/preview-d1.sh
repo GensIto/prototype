@@ -38,7 +38,7 @@ ensure_database() {
     return 0
   fi
 
-  bunx wrangler d1 create "$DB_NAME" >/dev/null
+  bunx wrangler d1 create "$DB_NAME" >&2
   id="$(database_id)"
   echo "database_name=${DB_NAME}"
   echo "database_id=${id}"
@@ -46,19 +46,19 @@ ensure_database() {
 
 migrate_database() {
   require_cloudflare_env
-  bunx wrangler d1 migrations apply "$DB_NAME" --remote
+  bunx wrangler d1 migrations apply "$DB_NAME" --remote >&2
 }
 
 delete_database() {
   require_cloudflare_env
 
   if ! id="$(database_id)"; then
-    echo "skip: database ${DB_NAME} not found"
+    echo "skip: database ${DB_NAME} not found" >&2
     return 0
   fi
 
-  bunx wrangler d1 delete "$DB_NAME" --skip-confirmation
-  echo "deleted: ${DB_NAME} (${id})"
+  bunx wrangler d1 delete "$DB_NAME" --skip-confirmation >&2
+  echo "deleted: ${DB_NAME} (${id})" >&2
 }
 
 case "$COMMAND" in
