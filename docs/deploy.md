@@ -82,17 +82,23 @@ bun run deploy:production
 
 | Worker 名             | 本番ブランチ | 非本番ブランチのビルド | デプロイコマンド            | 非本番ブランチのデプロイコマンド |
 | --------------------- | ------------ | ---------------------- | --------------------------- | -------------------------------- |
-| `prottype`            | `develop`    | **有効**               | `bun run deploy:develop`    | `bun run deploy:preview`         |
+| `prottype`            | `develop`    | **無効**               | `bun run deploy:develop`    | —                                |
 | `prottype-staging`    | `staging`    | 無効                   | `bun run deploy:staging`    | —                                |
 | `prottype-production` | `main`       | 無効                   | `bun run deploy:production` | —                                |
 
 ### preview（PR 単位）の仕組み
 
-develop Worker（`prottype`）のみ非本番ブランチのビルドを有効にする。
+PR Preview は **GitHub Actions** が担当する（Workers Builds ではない）。
 
-- `develop` ブランチ push → `bun run deploy:develop` → develop 環境へデプロイ
-- それ以外のブランチ（`feature/*` 等）push → `bun run deploy:preview` → `wrangler versions upload`
-  - 本番トラフィックに影響しない Preview URL が PR に表示される
+1. `prottype-pr-<PR番号>` という D1 を作成（既存なら再利用）
+2. マイグレーションを適用
+3. PR 専用 `wrangler.preview.pr-<番号>.jsonc` で `wrangler versions upload`
+4. PR コメントに Preview URL と D1 名を投稿
+5. **PR クローズ時**（マージ / 未マージ）に D1 を削除
+
+develop Worker（`prottype`）のシークレット（`BETTER_AUTH_*`）は Preview バージョンでも継承される。Auth の `baseURL` はリクエスト origin を使うため Preview URL でもログイン可能。
+
+**Workers Builds の非本番ブランチビルドは無効** にすること。有効だと develop D1 を使う preview が二重実行される。
 
 [Build branches 公式ドキュメント](https://developers.cloudflare.com/workers/ci-cd/builds/build-branches/)
 
@@ -113,7 +119,7 @@ Workers Builds のブランチ制御は「本番ブランチ 1 つ + 非本番�
 
 ## GitHub Actions
 
-[`.github/workflows/ci.yml`](../.github/workflows/ci.yml) で CI と PR preview を実行する。
+[`.github/workflows/ci.yml`](../.github/workflows/ci.yml) で CI と **PR 専用 Preview（D1 分離）** を実行する。
 
 ### CI（quality ジョブ）
 
@@ -129,17 +135,31 @@ Workers Builds のブランチ制御は「本番ブランチ 1 つ + 非本番�
 
 - `quality` 成功後のみ実行
 - フォーク PR は secrets 不可のため **スキップ**
-- `scripts/deploy-preview.sh` → `wrangler versions upload --preview-alias pr-<番号>`
-- Preview URL を PR コメントに投稿（`<!-- prottype-preview -->` タグで更新）
+- フロー:
+  1. `scripts/preview-d1.sh ensure <pr>` — D1 `prottype-pr-<番号>` 作成
+  2. `scripts/preview-d1.sh migrate <pr>` — マイグレーション適用
+  3. `scripts/deploy-preview.sh <pr>` — Preview デプロイ
+  4. PR コメントに Preview URL / D1 名を投稿
+
+### Preview クリーンアップ（preview-cleanup ジョブ）
+
+- PR **クローズ時**（マージ / 未マージ）に `scripts/preview-d1.sh delete <pr>` で D1 を削除
 
 ### GitHub Secrets
 
-| Name                    | 説明                                 |
-| ----------------------- | ------------------------------------ |
-| `CLOUDFLARE_API_TOKEN`  | API トークン（Workers Scripts Edit） |
-| `CLOUDFLARE_ACCOUNT_ID` | アカウント ID                        |
+| Name                    | 説明                                |
+| ----------------------- | ----------------------------------- |
+| `CLOUDFLARE_API_TOKEN`  | D1 作成・削除、Workers Scripts Edit |
+| `CLOUDFLARE_ACCOUNT_ID` | アカウント ID                       |
 
-Workers Builds と併用可能。PR preview のみ GitHub Actions、develop/staging/production は Workers Builds でもよい。
+#### 手動で PR preview を試す場合
+
+```bash
+export CLOUDFLARE_API_TOKEN=...
+export CLOUDFLARE_ACCOUNT_ID=...
+bash scripts/deploy-preview.sh <pr-number>
+bash scripts/preview-d1.sh delete <pr-number>   # 後片付け
+```
 
 ## 関連
 

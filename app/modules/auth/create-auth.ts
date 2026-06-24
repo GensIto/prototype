@@ -8,14 +8,34 @@ type AuthExecutionContext = {
   waitUntil(promise: Promise<unknown>): void
 }
 
-export function createAuth(env: CloudflareBindings, ctx?: AuthExecutionContext) {
+type CreateAuthOptions = {
+  requestUrl?: string
+}
+
+function resolveAuthBaseUrl(env: CloudflareBindings, requestUrl?: string) {
+  if (requestUrl) {
+    return new URL(requestUrl).origin
+  }
+
+  return env.BETTER_AUTH_URL
+}
+
+export function createAuth(
+  env: CloudflareBindings,
+  ctx?: AuthExecutionContext,
+  options?: CreateAuthOptions,
+) {
   const db = createDb(env.DB)
+  const baseURL = resolveAuthBaseUrl(env, options?.requestUrl)
+  const trustedOrigins = [
+    ...new Set([env.BETTER_AUTH_URL, baseURL, 'http://localhost:5173', 'http://127.0.0.1:5173']),
+  ]
 
   return betterAuth({
     appName: 'prottype',
-    baseURL: env.BETTER_AUTH_URL,
+    baseURL,
     secret: env.BETTER_AUTH_SECRET,
-    trustedOrigins: [env.BETTER_AUTH_URL, 'http://localhost:5173', 'http://127.0.0.1:5173'],
+    trustedOrigins,
     database: drizzleAdapter(db, {
       provider: 'sqlite',
       schema,
@@ -23,7 +43,7 @@ export function createAuth(env: CloudflareBindings, ctx?: AuthExecutionContext) 
     }),
     emailAndPassword: { enabled: true },
     advanced: {
-      useSecureCookies: env.BETTER_AUTH_URL.startsWith('https'),
+      useSecureCookies: baseURL.startsWith('https'),
       ipAddress: {
         ipAddressHeaders: ['cf-connecting-ip', 'x-forwarded-for'],
       },

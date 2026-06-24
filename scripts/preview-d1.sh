@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT"
+
+COMMAND="${1:?Usage: preview-d1.sh <ensure|migrate|delete> <pr-number>}"
+PR_NUMBER="${2:?Usage: preview-d1.sh <command> <pr-number>}"
+
+DB_NAME="prottype-pr-${PR_NUMBER}"
+
+require_cloudflare_env() {
+  if [[ -z "${CLOUDFLARE_API_TOKEN:-}" || -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]]; then
+    echo "FAIL: CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID are required" >&2
+    exit 1
+  fi
+}
+
+database_id() {
+  bunx wrangler d1 info "$DB_NAME" --json 2>/dev/null \
+    | bun -e "
+        const fs = require('node:fs')
+        const input = fs.readFileSync(0, 'utf8').trim()
+        if (!input) process.exit(1)
+        const data = JSON.parse(input)
+        const id = data.uuid ?? data.database_id
+        if (!id) process.exit(1)
+        process.stdout.write(String(id))
+      "
+}
+
+ensure_database() {
+  require_cloudflare_env
+
+  if id="$(database_id)"; then
+    echo "database_name=${DB_NAME}"
+    echo "database_id=${id}"
+    return 0
+  fi
+
+  bunx wrangler d1 create "$DB_NAME" >/dev/null
+  id="$(database_id)"
+  echo "database_name=${DB_NAME}"
+  echo "database_id=${id}"
+}
+
+migrate_database() {
+  require_cloudflare_env
+  bunx wrangler d1 migrations apply "$DB_NAME" --remote
+}
+
+delete_database() {
+  require_cloudflare_env
+
+  if ! id="$(database_id)"; then
+    echo "skip: database ${DB_NAME} not found"
+    return 0
+  fi
+
+  bunx wrangler d1 delete "$DB_NAME" --skip-confirmation
+  echo "deleted: ${DB_NAME} (${id})"
+}
+
+case "$COMMAND" in
+  ensure)
+    ensure_database
+    ;;
+  migrate)
+    migrate_database
+    ;;
+  delete)
+    delete_database
+    ;;
+  *)
+    echo "FAIL: unknown command: ${COMMAND}" >&2
+    exit 1
+    ;;
+esac

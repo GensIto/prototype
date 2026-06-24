@@ -1,9 +1,30 @@
 ---
 name: prottype-bootstrap
-description: prottype 相当の Cloudflare Workers フルスタックプロジェクトを空ディレクトリから0セットアップする。 Hono, Inertia, React 19, D1, Drizzle, Better Auth, rulesync, QA skills, 多環境デプロイを含む。 新規プロジェクト立ち上げ、または「skills だけで再現できるか」の検証時に使う。
+description: prottype の立ち上げ手順。clone 後のローカル開発セットアップ、または空ディレクトリからの 0→1 再現。 Hono, Inertia, React 19, D1, Drizzle, Better Auth, rulesync, QA skills, 多環境デプロイ・PR Preview（D1 分離）を含む。 新規プロジェクト立ち上げ、既存リポジトリの初期セットアップ、再現性検証時に使う。
 ---
 
-# prottype 0→1 ブートストラップ
+# prottype ブートストラップ
+
+## 既存リポジトリの立ち上げ（clone 後）
+
+README と同じ手順。ローカル開発だけなら Cloudflare リモート設定は不要。
+
+```bash
+git clone <repository-url> && cd prottype
+bun install
+cp .dev.vars.example .dev.vars   # BETTER_AUTH_* を編集
+bun run db:setup
+bun run rulesync                 # Cursor skills / rules 同期
+bun run dev                      # http://localhost:5173
+```
+
+検収: `bun run ci` が PASS。
+
+Cloudflare デプロイ・PR Preview を使う場合は README の「Cloudflare リモート環境のセットアップ」および skill `workers-deploy` を参照。
+
+---
+
+## 0→1 再現（空ディレクトリ）
 
 空ディレクトリから本リポジトリ相当の構成を再現する手順。**clone しない。**
 
@@ -160,14 +181,21 @@ rulesync / verify:repro
 
 詳細: skill `workers-deploy`, [Zenn Workers Builds](https://zenn.dev/frontendflat/articles/workers-build-deploy)
 
-## Phase 5b — GitHub Actions（CI + PR Preview）
+## Phase 5b — GitHub Actions（CI + PR Preview・D1 分離）
 
 ```
 .github/workflows/ci.yml
 scripts/deploy-preview.sh
+scripts/preview-d1.sh
+scripts/render-wrangler-preview-config.sh
 scripts/rulesync-check.sh
 .prettierignore
+.gitignore                    # wrangler.preview.*.jsonc
 ```
+
+`wrangler.jsonc` に `preview_urls: true` を設定。
+
+`app/modules/auth/create-auth.ts` は Preview URL 対応のため、リクエスト origin を `baseURL` に使う（`middleware.ts` から `requestUrl` を渡す）。
 
 `package.json` に追加:
 
@@ -177,14 +205,24 @@ scripts/rulesync-check.sh
 "ci": "bun run lint && bun run format:check && bun run rulesync:check && bun run test && bun run build"
 ```
 
+`ci.yml` ジョブ構成:
+
+| ジョブ            | トリガー                                                                 |
+| ----------------- | ------------------------------------------------------------------------ |
+| `quality`         | PR / main・develop・staging push                                         |
+| `preview`         | 同一リポジトリ PR（open/sync）— PR 専用 D1 作成 → デプロイ → PR コメント |
+| `preview-cleanup` | PR クローズ（マージ / 未マージ）— D1 削除                                |
+
 GitHub Secrets（リポジトリ Settings → Secrets）:
 
-| Secret                  | 用途                     |
-| ----------------------- | ------------------------ |
-| `CLOUDFLARE_API_TOKEN`  | Workers preview upload   |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare アカウント ID |
+| Secret                  | 用途                                  |
+| ----------------------- | ------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`  | D1 作成・削除、Workers preview upload |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare アカウント ID              |
 
-`ci.yml` の内容は本リポジトリ [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) と同一にする。
+Workers Builds: `prottype` Worker の **非本番ブランチビルドは無効**（GHA preview と二重実行を防ぐ）。
+
+`ci.yml` の内容は本リポジトリ [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) と同一にする。詳細: skill `workers-deploy`。
 
 ## Phase 6 — Acceptance（検収）
 
@@ -218,7 +256,10 @@ test -f docs/bootstrap-verify.md
 test -f wrangler.jsonc
 test -f .github/workflows/ci.yml
 test -f scripts/deploy-preview.sh
+test -f scripts/preview-d1.sh
+test -f scripts/render-wrangler-preview-config.sh
 test -f scripts/rulesync-check.sh
+grep -q 'preview_urls' wrangler.jsonc
 grep -q 'env.staging' wrangler.jsonc
 grep -q 'env.production' wrangler.jsonc
 grep -q 'format:check' package.json
@@ -231,7 +272,7 @@ grep -q 'rulesync:check' package.json
 - [ ] `package.json` の `zod` は **4.x** exact pin（`^` / `~` なし）
 - [ ] `app/modules/validation/zod-result.ts` が存在する
 - [ ] ドメイン Port は `I<Domain>Repository`、操作は `<domain>.create` / `fromRow` 名前空間
-- [ ] `.github/workflows/ci.yml` に `quality` + `preview` ジョブがある
+- [ ] `.github/workflows/ci.yml` に `quality` + `preview` + `preview-cleanup` ジョブがある
 - [ ] `bun run ci` が PASS
 - [ ] `package.json` 依存に `^` / `~` なし
 - [ ] ESLint import 境界が prottype-stack と一致

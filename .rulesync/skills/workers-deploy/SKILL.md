@@ -1,9 +1,6 @@
 ---
 name: workers-deploy
-description: >-
-  prottype の Cloudflare Workers 多環境デプロイ手順。
-  develop / staging / production / preview（PR 単位）、GitHub Actions CI、
-  wrangler.jsonc env 設定、D1・シークレットの環境分離、Workers Builds 設定時に使う。
+description: prottype の Cloudflare Workers 多環境デプロイ手順。 develop / staging / production / preview（PR 単位・D1 分離）、GitHub Actions CI、 wrangler.jsonc env 設定、D1・シークレットの環境分離、Workers Builds 設定時に使う。
 ---
 
 # Workers 多環境デプロイ
@@ -12,12 +9,12 @@ description: >-
 
 ## 環境マップ
 
-| 環境       | Worker 名             | ブランチ  | コマンド                                              |
-| ---------- | --------------------- | --------- | ----------------------------------------------------- |
-| develop    | `prottype`            | `develop` | `bun run deploy:develop`                              |
-| preview    | `prottype`（同一）    | PR        | GitHub Actions（推奨）または `bun run deploy:preview` |
-| staging    | `prottype-staging`    | `staging` | `bun run deploy:staging`                              |
-| production | `prottype-production` | `main`    | `bun run deploy:production`                           |
+| 環境       | Worker 名             | ブランチ  | D1                           | デプロイ方式        |
+| ---------- | --------------------- | --------- | ---------------------------- | ------------------- |
+| develop    | `prottype`            | `develop` | `prottype`                   | Workers Builds 自動 |
+| preview    | `prottype`（同一）    | PR        | `prottype-pr-<番号>`（専用） | GitHub Actions      |
+| staging    | `prottype-staging`    | `staging` | `prottype-staging`           | Workers Builds 自動 |
+| production | `prottype-production` | `main`    | `prottype-production`        | Workers Builds 自動 |
 
 ## wrangler.jsonc 規約
 
@@ -25,6 +22,7 @@ description: >-
 - `env.staging` → Worker `prottype-staging`
 - `env.production` → Worker `prottype-production`
 - D1 binding 名 `DB` は全環境で統一、`database_id` で接続先を分離
+- `preview_urls: true` を設定（Preview URL 生成のため）
 - `vars` / `d1_databases` は継承されない → 各 env に明示記述
 - 機密情報（`BETTER_AUTH_*`）は `wrangler secret put --env <env>` で登録（`vars` に書かない）
 
@@ -35,18 +33,15 @@ description: >-
 3. `bun run db:migrate:remote[:staging|:production]` 実行済み
 4. Workers Builds の Worker 名と wrangler の解決名が一致
 
-## Workers Builds 設定（develop / preview）
+## Workers Builds 設定（develop / staging / production）
 
 `prottype` Worker の Builds 設定:
 
 - 本番ブランチ: `develop`
-- 非本番ブランチのビルド: **有効**
+- 非本番ブランチのビルド: **無効**（PR preview は GitHub Actions が担当）
 - デプロイコマンド: `bun run deploy:develop`
-- 非本番ブランチのデプロイコマンド: `bun run deploy:preview`
 
-preview は `wrangler versions upload` を使い、PR ごとに Preview URL を発行。本番トラフィックには影響しない。
-
-**PR preview は GitHub Actions を正本とする**（Workers Builds の非本番ブランチ preview と併用可）。
+**PR preview は Workers Builds では行わない。** 非本番ブランチビルドを有効にすると develop D1 を使う preview が GHA と二重実行される。
 
 ## GitHub Actions（CI + PR Preview）
 
@@ -54,10 +49,11 @@ preview は `wrangler versions upload` を使い、PR ごとに Preview URL を�
 
 ### トリガー
 
-| イベント                               | ジョブ                |
-| -------------------------------------- | --------------------- |
-| PR / `main`・`develop`・`staging` push | `quality`             |
-| 同一リポジトリの PR                    | `quality` → `preview` |
+| イベント                               | ジョブ                       |
+| -------------------------------------- | ---------------------------- |
+| PR / `main`・`develop`・`staging` push | `quality`                    |
+| 同一リポジトリの PR（open/sync）       | `quality` → `preview`        |
+| PR クローズ（マージ / 未マージ）       | `preview-cleanup`（D1 削除） |
 
 - `concurrency`: 同一 ref で in-progress をキャンセル
 - フォーク PR は secrets 不可のため **preview はスキップ**
@@ -75,31 +71,35 @@ bun run build
 
 ローカル同等: `bun run ci`
 
-### preview ジョブ
+### preview ジョブ（D1 分離）
 
 1. `quality` 成功後のみ実行
-2. `scripts/deploy-preview.sh <pr-number>`:
-   - `bun run build`
-   - `wrangler versions upload --preview-alias pr-<番号> --message "Preview for PR #<番号>"`
-   - stdout から `Version Preview Alias URL` を抽出 → `preview_url=...`
-3. `actions/github-script` で PR コメント投稿（`<!-- prottype-preview -->` タグで更新）
+2. `scripts/preview-d1.sh ensure <pr>` — D1 `prottype-pr-<番号>` を作成（既存なら再利用）
+3. `scripts/preview-d1.sh migrate <pr>` — マイグレーション適用
+4. `scripts/render-wrangler-preview-config.sh` — PR 専用 wrangler 設定を生成
+5. `wrangler versions upload --preview-alias pr-<番号>` — Preview デプロイ
+6. PR コメントに Preview URL / D1 名を投稿
 
-Preview URL 形式: `https://pr-<番号>-prottype.<subdomain>.workers.dev`
+Auth はリクエスト origin を `baseURL` に使うため Preview URL でもログイン可能。`BETTER_AUTH_SECRET` は develop Worker の secret を継承。
 
-### GitHub Secrets（必須）
+### preview-cleanup ジョブ
 
-| Secret                  | 用途                                       |
-| ----------------------- | ------------------------------------------ |
-| `CLOUDFLARE_API_TOKEN`  | Workers Scripts Edit 権限付き API トークン |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare アカウント ID                   |
+- PR **クローズ時**（マージ / 未マージ）に `scripts/preview-d1.sh delete <pr>` で D1 を削除
 
-develop Worker（`prottype`）に `BETTER_AUTH_*` 等が wrangler secret で登録済みであること。
+### GitHub Secrets（preview 用）
+
+| Secret                  | 用途                                |
+| ----------------------- | ----------------------------------- |
+| `CLOUDFLARE_API_TOKEN`  | D1 作成・削除、Workers Scripts Edit |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare アカウント ID            |
 
 ### 関連ファイル
 
 ```
 .github/workflows/ci.yml
 scripts/deploy-preview.sh
+scripts/preview-d1.sh
+scripts/render-wrangler-preview-config.sh
 scripts/rulesync-check.sh
 .prettierignore
 package.json   # format:check, rulesync:check, ci
@@ -111,7 +111,10 @@ package.json   # format:check, rulesync:check, ci
 bun run deploy:develop
 bun run deploy:staging
 bun run deploy:production
-bun run deploy:preview    # PR preview（develop Worker 上）
+
+# PR preview（要 CLOUDFLARE_* env）
+bash scripts/deploy-preview.sh <pr-number>
+bash scripts/preview-d1.sh delete <pr-number>
 ```
 
 ## シークレット一括登録
@@ -134,4 +137,5 @@ bun run db:migrate:remote:production
 
 - Workers Builds 単体ではブランチの細かいフィルタ不可
 - `wrangler.jsonc` を Source of truth とし、ダッシュボードでの手動変更は避ける
+- D1 はアカウントあたりの上限あり。PR クローズ後の削除漏れに注意
 - 詳細: [docs/deploy.md](../../docs/deploy.md)

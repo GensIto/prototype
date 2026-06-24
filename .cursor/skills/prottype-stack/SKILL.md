@@ -2,7 +2,6 @@
 name: prottype-stack
 description: prottype プロジェクトの技術スタック・レイヤー構成・import 境界・バリデーション流れ。 Cloudflare Workers, Hono, Inertia, React 19, D1, Drizzle, Better Auth, Tailwind v4, shadcn/ui で実装するとき、または app/ 配下のコードを書くときに使う。
 ---
-
 # prottype 技術スタック
 
 ## ランタイム・インフラ
@@ -104,6 +103,18 @@ export function safeParseToResult<T>(parsed: ZodSafeParseResult<T>): Result<T, V
 - ドメイン Port は `I<Domain>Repository`、Adapter は `class D1XxxRepository implements IXxxRepository`
 - ドメイン操作は `export const xxx = { create, toggle, fromRow, parseId }` 名前空間（詳細: skill `lightweight-ddd-tdd`）
 
+## ローカル開発の立ち上げ
+
+```bash
+bun install
+cp .dev.vars.example .dev.vars
+bun run db:setup
+bun run rulesync
+bun run dev
+```
+
+詳細: [README.md](../../README.md)、skill `prottype-bootstrap`
+
 ## 主要コマンド
 
 ```bash
@@ -122,21 +133,22 @@ bun run rulesync         # .rulesync → .cursor 同期
 
 [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) — 詳細は skill `workers-deploy`
 
-| ジョブ    | 内容                                                               |
-| --------- | ------------------------------------------------------------------ |
-| `quality` | lint → format:check → rulesync:check → test → build                |
-| `preview` | quality 成功後、PR ごとに `wrangler versions upload` → PR コメント |
+| ジョブ            | 内容                                                                                      |
+| ----------------- | ----------------------------------------------------------------------------------------- |
+| `quality`         | lint → format:check → rulesync:check → test → build                                       |
+| `preview`         | quality 成功後、PR 専用 D1 作成 → Preview デプロイ → PR コメント。PR クローズ時に D1 削除 |
+| `preview-cleanup` | PR クローズ（マージ / 未マージ）— D1 削除                                                 |
 
 PR preview に必要な GitHub Secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`
 
 ## デプロイ環境
 
-| 環境       | Worker                | ブランチ    | コマンド                           |
-| ---------- | --------------------- | ----------- | ---------------------------------- |
-| develop    | `prottype`            | `develop`   | `bun run deploy:develop`           |
-| preview    | `prottype`            | PR ブランチ | GitHub Actions（`preview` ジョブ） |
-| staging    | `prottype-staging`    | `staging`   | `bun run deploy:staging`           |
-| production | `prottype-production` | `main`      | `bun run deploy:production`        |
+| 環境       | Worker                | ブランチ    | コマンド                    |
+| ---------- | --------------------- | ----------- | --------------------------- |
+| develop    | `prottype`            | `develop`   | `bun run deploy:develop`    |
+| preview    | `prottype`            | PR ブランチ | GitHub Actions（D1 分離）   |
+| staging    | `prottype-staging`    | `staging`   | `bun run deploy:staging`    |
+| production | `prottype-production` | `main`      | `bun run deploy:production` |
 
 詳細は skill `workers-deploy` および [docs/deploy.md](../../docs/deploy.md) を参照。
 

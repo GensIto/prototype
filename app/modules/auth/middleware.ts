@@ -18,7 +18,7 @@ export type AppVariables = {
 type Env = { Bindings: CloudflareBindings; Variables: AppVariables }
 
 export async function authMiddleware(c: Context<Env>, next: Next) {
-  const auth = createAuth(c.env, c.executionCtx)
+  const auth = createAuth(c.env, c.executionCtx, { requestUrl: c.req.url })
   c.set('auth', auth)
 
   const session = await auth.api.getSession({ headers: c.req.raw.headers })
