@@ -2,6 +2,7 @@
 name: qa-review
 description: 'テストケース・Vitest テストの品質レビュー。7人のQAペルソナで観点漏れを指摘する。 指摘のみで修正は行わない。test-case-creation 後のレビュー、PR 前のテスト設計確認時に使う。 出典: https://zenn.dev/nexta_/articles/be13a2395a5d2a'
 ---
+
 # QA レビュー（指摘のみ）
 
 ## 責務
