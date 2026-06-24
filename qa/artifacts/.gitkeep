@@ -1,0 +1,3 @@
+# qa/artifacts — Issue・移行ごとのスナップショット
+
+`YYYY-MM/<issue-id>/test-cases.csv` 形式で保存。

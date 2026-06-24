@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["app/*"]
+    },
+    "types": ["@cloudflare/workers-types"]
+  },
+  "include": [
+    "app/**/*",
+    "vite.config.ts",
+    "drizzle.config.ts",
+    "vitest.config.ts",
+    "env.d.ts",
+    "worker-configuration.d.ts"
+  ]
+}

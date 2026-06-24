@@ -1,0 +1,8 @@
+{
+  "$schema": "https://github.com/dyoshikawa/rulesync/releases/latest/download/config-schema.json",
+  "targets": {
+    "cursor": ["rules", "skills", "mcp"],
+  },
+  "outputRoots": ["."],
+  "delete": false,
+}

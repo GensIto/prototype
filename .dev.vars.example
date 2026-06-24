@@ -1,0 +1,2 @@
+BETTER_AUTH_SECRET=dev-secret-change-me-min-32-characters-long
+BETTER_AUTH_URL=http://localhost:5173

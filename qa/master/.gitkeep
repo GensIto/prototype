@@ -1,0 +1,5 @@
+# qa/master — 生きているテストケース正本
+
+機能ごとに `<feature>.csv` を置く。フォーマットは skill `test-case-creation` を参照。
+
+廃止ケースは削除せず、テストケースID 行に `DEPRECATED` を付ける。

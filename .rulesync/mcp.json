@@ -1,0 +1,18 @@
+{
+  "$schema": "https://github.com/dyoshikawa/rulesync/releases/latest/download/mcp-schema.json",
+  "mcpServers": {
+    "better-auth": {
+      "description": "Better Auth 公式 MCP — ドキュメント検索・設定支援",
+      "type": "http",
+      "url": "https://mcp.inkeep.com/better-auth/mcp",
+      "headers": {}
+    },
+    "context7": {
+      "description": "ライブラリ公式ドキュメント検索",
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"],
+      "env": {}
+    }
+  }
+}
