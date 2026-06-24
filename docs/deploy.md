@@ -98,6 +98,8 @@ PR Preview は **GitHub Actions** が担当する（Workers Builds ではない�
 
 develop Worker（`prottype`）のシークレット（`BETTER_AUTH_*`）は Preview バージョンでも継承される。Auth の `baseURL` はリクエスト origin を使うため Preview URL でもログイン可能。
 
+**初回 PR Preview 時**: Worker `prottype` が未作成の場合、GitHub Actions が `wrangler deploy` で自動作成する（develop D1 バインド）。Auth を使う場合は事前にローカルで `bun run deploy:develop` と `wrangler secret bulk secrets.json` を実行しておくことを推奨。
+
 **Workers Builds の非本番ブランチビルドは無効** にすること。有効だと develop D1 を使う preview が二重実行される。
 
 [Build branches 公式ドキュメント](https://developers.cloudflare.com/workers/ci-cd/builds/build-branches/)

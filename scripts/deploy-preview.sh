@@ -105,12 +105,29 @@ export WRANGLER_OUTPUT_FILE_PATH="$OUTPUT_JSON"
 log "Building preview for PR #${PR_NUMBER} (D1: ${DATABASE_NAME})"
 bun run build >&2
 
+log "Ensuring Worker prottype exists"
+bash scripts/ensure-worker.sh prottype "${ROOT}/wrangler.jsonc"
+
 log "Uploading preview version (alias: ${ALIAS})"
-bunx wrangler versions upload \
-  --config "$config_path" \
-  --preview-alias "$ALIAS" \
-  --message "$MESSAGE" \
-  2>&1 | tee "$LOG_FILE" >&2
+upload_preview() {
+  rm -f "$OUTPUT_JSON"
+  bunx wrangler versions upload \
+    --config "$config_path" \
+    --preview-alias "$ALIAS" \
+    --message "$MESSAGE" \
+    2>&1 | tee "$LOG_FILE" >&2
+  return "${PIPESTATUS[0]}"
+}
+
+if ! upload_preview; then
+  if grep -qE '10007|does not exist on your account' "$LOG_FILE"; then
+    log "Worker prottype が未作成のため初回 deploy 後に再試行します"
+    bash scripts/ensure-worker.sh prottype "${ROOT}/wrangler.jsonc"
+    upload_preview
+  else
+    exit 1
+  fi
+fi
 
 PREVIEW_URL="$(extract_url_from_json || true)"
 if [[ -z "$PREVIEW_URL" ]]; then
