@@ -34,7 +34,24 @@ ensure_database() {
 
 migrate_database() {
   require_cloudflare_env
-  bunx wrangler d1 migrations apply "$DB_NAME" --remote >&2
+
+  id="$(database_id)"
+  if [[ -z "$id" ]]; then
+    echo "FAIL: database ${DB_NAME} not found. Run ensure first." >&2
+    exit 1
+  fi
+
+  config_path="$(
+    bash scripts/render-wrangler-preview-config.sh "${PR_NUMBER}" "${id}" \
+      | grep '^config_path=' \
+      | cut -d= -f2-
+  )"
+  if [[ -z "$config_path" || ! -f "$config_path" ]]; then
+    echo "FAIL: could not render preview wrangler config for migrate" >&2
+    exit 1
+  fi
+
+  bunx wrangler d1 migrations apply "$DB_NAME" --remote --config "$config_path" >&2
 }
 
 delete_database() {
